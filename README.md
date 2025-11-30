@@ -13,7 +13,7 @@ Sistema web completo para el departamento de Recursos Humanos de Taller de Node.
 
 ## Requisitos
 
-- Node.js 
+- Node.js
 - npm
 
 ## Instalación
@@ -25,7 +25,9 @@ npm install
 
 2. Configurar variables de entorno:
 ```bash
-cp .env.example .env
+PORT=3000
+JWT_SECRET=jajajtokenxd
+JWT_EXPIRES_IN=24h
 ```
 
 Edita el archivo `.env` y configura tu `JWT_SECRET`.

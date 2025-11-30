@@ -106,7 +106,12 @@ async function searchEmployees(name) {
             renderEmployees(employees);
             isSearchMode = true;
             clearSearchBtn.style.display = 'inline-block';
-            showMessage(`Se encontraron ${employees.length} empleado(s)`, 'success');
+            // Mostrar mensaje especial si no se encontraron resultados en búsqueda
+            if (employees.length === 0) {
+                showMessage('No se encontraron coincidencias', 'success');
+            } else {
+                showMessage(`Se encontraron ${employees.length} empleado(s)`, 'success');
+            }
         } else {
             showMessage('Error al buscar empleados', 'error');
             renderEmployees([]);
@@ -120,9 +125,10 @@ async function searchEmployees(name) {
 // Renderizar empleados en la tabla
 function renderEmployees(employeesList) {
     if (employeesList.length === 0) {
+        const emptyText = isSearchMode ? 'No se encontraron coincidencias' : 'No se encontraron empleados';
         employeesTableBody.innerHTML = `
             <tr>
-                <td colspan="7" class="loading">No se encontraron empleados</td>
+                <td colspan="7" class="loading">${emptyText}</td>
             </tr>
         `;
         return;
