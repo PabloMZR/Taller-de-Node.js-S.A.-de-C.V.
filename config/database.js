@@ -1,61 +1,51 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+const { Pool } = require('pg');
+require('dotenv').config();
 
-const DB_PATH = path.join(__dirname, '..', 'database.db');
-
-// Crear conexión a la base de datos
-const db = new sqlite3.Database(DB_PATH, (err) => {
-  if (err) {
-    console.error('Error al conectar con la base de datos:', err.message);
-  } else {
-    console.log('Conectado a la base de datos SQLite');
-  }
+// Configuración para conexión PostgreSQL, adaptable a Azure
+const pool = new Pool({
+  user: process.env.PGUSER || 'postgres',
+  host: process.env.PGHOST || 'localhost',
+  database: process.env.PGDATABASE || 'proyectoapi',
+  password: process.env.PGPASSWORD || 'postgres',
+  port: process.env.PGPORT || 5432,
+  ssl: process.env.PGSSLMODE === 'require' ? { rejectUnauthorized: false } : false // útil para cloud
 });
 
-// Inicializar tablas
-const initDatabase = () => {
-  return new Promise((resolve, reject) => {
+// Inicializar tablas en PostgreSQL
+const initDatabase = async () => {
+  try {
     // Tabla de usuarios (administradores)
-    db.run(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
-    `, (err) => {
-      if (err) {
-        console.error('Error al crear tabla users:', err.message);
-        reject(err);
-      }
-    });
+    `);
 
     // Tabla de empleados
-    db.run(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS employees (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         nombre TEXT NOT NULL,
         apellidos TEXT NOT NULL,
         telefono TEXT NOT NULL,
         correo TEXT NOT NULL UNIQUE,
         direccion TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
-    `, (err) => {
-      if (err) {
-        console.error('Error al crear tabla employees:', err.message);
-        reject(err);
-      } else {
-        console.log('Tablas inicializadas correctamente');
-        resolve();
-      }
-    });
-  });
+    `);
+    console.log('Tablas inicializadas correctamente en PostgreSQL');
+  } catch (err) {
+    console.error('Error al crear tablas:', err);
+    process.exit(1);
+  }
 };
 
 // Ejecutar inicialización
 initDatabase();
 
-module.exports = db;
+module.exports = pool;
 
