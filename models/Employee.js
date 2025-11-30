@@ -1,95 +1,58 @@
-const db = require('../config/database');
+const pool = require('../config/database');
 
 class Employee {
   // Obtener todos los empleados
-  static getAll(callback) {
-    db.all(
-      'SELECT * FROM employees ORDER BY created_at DESC',
-      callback
-    );
+  static async getAll() {
+    const { rows } = await pool.query('SELECT * FROM employees ORDER BY created_at DESC');
+    return rows;
   }
 
   // Buscar empleados por nombre
-  static searchByName(name, callback) {
+  static async searchByName(name) {
     const searchTerm = `%${name}%`;
-    db.all(
+    const { rows } = await pool.query(
       `SELECT * FROM employees 
-       WHERE nombre LIKE ? OR apellidos LIKE ? 
+       WHERE nombre ILIKE $1 OR apellidos ILIKE $2 
        ORDER BY nombre ASC`,
-      [searchTerm, searchTerm],
-      callback
+      [searchTerm, searchTerm]
     );
+    return rows;
   }
 
   // Obtener empleado por ID
-  static findById(id, callback) {
-    db.get(
-      'SELECT * FROM employees WHERE id = ?',
-      [id],
-      callback
-    );
+  static async findById(id) {
+    const { rows } = await pool.query('SELECT * FROM employees WHERE id = $1', [id]);
+    return rows[0] || null;
   }
 
   // Crear nuevo empleado
-  static create(employeeData, callback) {
+  static async create(employeeData) {
     const { nombre, apellidos, telefono, correo, direccion } = employeeData;
-    
-    db.run(
+    const result = await pool.query(
       `INSERT INTO employees (nombre, apellidos, telefono, correo, direccion) 
-       VALUES (?, ?, ?, ?, ?)`,
-      [nombre, apellidos, telefono, correo, direccion],
-      function(err) {
-        if (err) {
-          return callback(err);
-        }
-        // Retornar el empleado creado
-        Employee.findById(this.lastID, (err, employee) => {
-          if (err) {
-            return callback(err);
-          }
-          callback(null, employee);
-        });
-      }
+       VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+      [nombre, apellidos, telefono, correo, direccion]
     );
+    return Employee.findById(result.rows[0].id);
   }
 
   // Actualizar empleado
-  static update(id, employeeData, callback) {
+  static async update(id, employeeData) {
     const { nombre, apellidos, telefono, correo, direccion } = employeeData;
-    
-    db.run(
+    await pool.query(
       `UPDATE employees 
-       SET nombre = ?, apellidos = ?, telefono = ?, correo = ?, direccion = ?, 
+       SET nombre = $1, apellidos = $2, telefono = $3, correo = $4, direccion = $5, 
            updated_at = CURRENT_TIMESTAMP 
-       WHERE id = ?`,
-      [nombre, apellidos, telefono, correo, direccion, id],
-      function(err) {
-        if (err) {
-          return callback(err);
-        }
-        // Retornar el empleado actualizado
-        Employee.findById(id, (err, employee) => {
-          if (err) {
-            return callback(err);
-          }
-          callback(null, employee);
-        });
-      }
+       WHERE id = $6`,
+      [nombre, apellidos, telefono, correo, direccion, id]
     );
+    return Employee.findById(id);
   }
 
   // Eliminar empleado
-  static delete(id, callback) {
-    db.run(
-      'DELETE FROM employees WHERE id = ?',
-      [id],
-      function(err) {
-        if (err) {
-          return callback(err);
-        }
-        callback(null, { message: 'Empleado eliminado correctamente', deletedRows: this.changes });
-      }
-    );
+  static async delete(id) {
+    const result = await pool.query('DELETE FROM employees WHERE id = $1', [id]);
+    return { message: 'Empleado eliminado correctamente', deletedRows: result.rowCount };
   }
 }
 
