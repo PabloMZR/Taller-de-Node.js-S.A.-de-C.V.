@@ -9,11 +9,12 @@ Sistema web completo para el departamento de Recursos Humanos de Taller de Node.
 - CRUD completo de empleados
 - Búsqueda de empleados por nombre
 - Interfaz de usuario amigable
-- Base de datos SQLite
+- Base de datos PostgreSQL (compatible con Azure PostgreSQL)
+- Despliegue listo para Azure App Service
 
 ## Requisitos
 
-- Node.js
+- Node.js (v18 o superior)
 - npm
 
 ## Instalación
@@ -37,7 +38,7 @@ Edita el archivo `.env` y configura tu `JWT_SECRET`.
 npm run init-db
 ```
 
-Esto creará un usuario administrador por defecto:
+Esto creará las tablas necesarias y un usuario administrador por defecto:
 - **Usuario:** admin
 - **Contraseña:** admin123
 
@@ -100,7 +101,7 @@ proyecto-api/
 ## Tecnologías
 
 - Express.js
-- SQLite3
+- PostgresSQL
 - JWT (JSON Web Tokens)
 - bcryptjs (hash de contraseñas)
 
